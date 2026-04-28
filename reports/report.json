@@ -1,0 +1,93 @@
+{
+    "target": "http://127.0.0.1:5000",
+    "endpoints": 3,
+    "results": [
+        {
+            "url": "http://127.0.0.1:5000/users/{id}",
+            "method": "GET",
+            "status": 404
+        },
+        {
+            "url": "http://127.0.0.1:5000/login",
+            "method": "POST",
+            "status": 415
+        },
+        {
+            "url": "http://127.0.0.1:5000/products",
+            "method": "GET",
+            "status": 200
+        }
+    ],
+    "vulnerabilities": [
+        {
+            "type": "IDOR",
+            "url": "http://127.0.0.1:5000/users/1",
+            "severity": "HIGH"
+        },
+        {
+            "type": "IDOR",
+            "url": "http://127.0.0.1:5000/users/2",
+            "severity": "HIGH"
+        },
+        {
+            "type": "IDOR",
+            "url": "http://127.0.0.1:5000/users/3",
+            "severity": "HIGH"
+        },
+        {
+            "type": "POSSIBLE_SQLI",
+            "url": "http://127.0.0.1:5000/users/999999",
+            "severity": "HIGH"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/999999",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/'",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/\"",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/' OR 1=1",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/<script>alert(1)</script>",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/../../etc/passwd",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/%00",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/${7*7}",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "RESPONSE_DIFF",
+            "url": "http://127.0.0.1:5000/users/null",
+            "severity": "MEDIUM"
+        },
+        {
+            "type": "NO_RATE_LIMIT",
+            "url": "http://127.0.0.1:5000/products",
+            "severity": "MEDIUM"
+        }
+    ]
+}

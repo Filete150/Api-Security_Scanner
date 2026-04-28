@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Security Scanner Pro</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #0b1220;
+        color: #e5e7eb;
+    }
+
+    header {
+        background: #111827;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #1f2937;
+    }
+
+    h1 {
+        font-size: 18px;
+        margin: 0;
+        color: #60a5fa;
+    }
+
+    .btn {
+        background: #3b82f6;
+        border: none;
+        padding: 8px 14px;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .btn:hover {
+        background: #2563eb;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: #111827;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #1f2937;
+    }
+
+    .vuln {
+        background: #0f172a;
+        padding: 10px;
+        margin: 6px 0;
+        border-left: 4px solid #3b82f6;
+        border-radius: 6px;
+    }
+
+    small {
+        color: #94a3b8;
+    }
+
+    #status {
+        margin-left: 10px;
+        font-size: 12px;
+        color: #22c55e;
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🛡 API Security Scanner Pro</h1>
+
+    <div>
+        <button class="btn" onclick="startScan()">🚀 Start Scan</button>
+        <span id="status"></span>
+    </div>
+</header>
+
+<div class="container">
+
+    <div class="grid">
+
+        <div class="card">
+            <h3>📊 Severity Distribution</h3>
+            <canvas id="severityChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h3>⚠️ Vulnerability Types</h3>
+            <canvas id="typeChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h3>📋 Vulnerabilities</h3>
+        <div id="vulns"></div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <h3>⚡ Live Scan</h3>
+        <div id="live"></div>
+    </div>
+
+</div>
+
+<script>
+
+let severityChart = null;
+let typeChart = null;
+
+// -------------------------
+// START SCAN
+// -------------------------
+async function startScan() {
+    document.getElementById("status").innerText = "Scanning...";
+
+    await fetch("/api/scan", { method: "POST" });
+
+    document.getElementById("status").innerText = "Done ✔";
+
+    loadData();
+}
+
+// -------------------------
+// LOAD DATA + CHARTS
+// -------------------------
+async function loadData() {
+    const stats = await fetch("/api/stats").then(r => r.json());
+    const report = await fetch("/api/report").then(r => r.json());
+
+    // destroy old charts
+    if (severityChart) severityChart.destroy();
+    if (typeChart) typeChart.destroy();
+
+    // -------------------------
+    // SEVERITY CHART
+    // -------------------------
+    severityChart = new Chart(
+        document.getElementById("severityChart"),
+        {
+            type: "pie",
+            data: {
+                labels: Object.keys(stats.severity || {}),
+                datasets: [{
+                    data: Object.values(stats.severity || {}),
+                    backgroundColor: ["#ef4444", "#f59e0b", "#22c55e"]
+                }]
+            }
+        }
+    );
+
+    // -------------------------
+    // TYPE CHART
+    // -------------------------
+    typeChart = new Chart(
+        document.getElementById("typeChart"),
+        {
+            type: "bar",
+            data: {
+                labels: Object.keys(stats.types || {}),
+                datasets: [{
+                    data: Object.values(stats.types || {}),
+                    backgroundColor: "#3b82f6"
+                }]
+            }
+        }
+    );
+
+    // -------------------------
+    // VULNERABILITIES LIST
+    // -------------------------
+    let html = "";
+
+    (report.vulnerabilities || []).forEach(v => {
+        html += `
+        <div class="vuln">
+            <b>${v.type}</b><br>
+            ${v.url}<br>
+            <small>${v.severity}</small>
+        </div>`;
+    });
+
+    document.getElementById("vulns").innerHTML = html;
+}
+
+// -------------------------
+// LIVE SCAN (POLLING)
+// -------------------------
+async function liveUpdate() {
+    const res = await fetch("/api/live");
+    const data = await res.json();
+
+    if (!data.last) return;
+
+    document.getElementById("live").innerHTML = `
+        <div class="vuln">
+            <b>NEW:</b> ${data.last.type}<br>
+            ${data.last.url}<br>
+            <small>${data.last.severity}</small>
+        </div>
+    `;
+}
+
+// init
+loadData();
+setInterval(liveUpdate, 2000);
+
+</script>
+
+</body>
+</html>
